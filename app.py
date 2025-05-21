@@ -1,6 +1,8 @@
 from flask import Flask, request
 import os
 import openai
+import requests
+from base64 import b64encode
 from twilio.rest import Client
 
 app = Flask(__name__)
@@ -16,7 +18,7 @@ client_twilio = Client(twilio_sid, twilio_token)
 
 @app.route("/", methods=["GET"])
 def index():
-    return "Zekabot GPT-4o görsel destekli aktif ✅"
+    return "Zekabot GPT-4o (görsel destekli) aktif ✅"
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
@@ -29,13 +31,23 @@ def webhook():
     if incoming_msg:
         messages.append({"type": "text", "text": incoming_msg})
 
+    # Görsel varsa Twilio'dan indir ve base64'e çevir
     if num_media > 0:
         media_url = request.values.get("MediaUrl0")
-        if media_url:
-            messages.append({
-                "type": "image_url",
-                "image_url": {"url": media_url}
-            })
+        try:
+            img_response = requests.get(media_url, auth=(twilio_sid, twilio_token))
+            if img_response.status_code == 200:
+                base64_image = b64encode(img_response.content).decode("utf-8")
+                messages.append({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{base64_image}"
+                    }
+                })
+            else:
+                messages.append({"type": "text", "text": "Görsel indirilemedi."})
+        except Exception as e:
+            messages.append({"type": "text", "text": f"Görsel hatası: {str(e)}"})
 
     if not messages:
         return "Boş mesaj", 400
@@ -43,10 +55,9 @@ def webhook():
     try:
         response = client_oai.chat.completions.create(
             model="gpt-4o",
-            messages=[
-                {"role": "user", "content": messages}
-            ],
-            max_tokens=500
+            messages=[{"role": "user", "content": messages}],
+            max_tokens=500,
+            temperature=0.7,
         )
         reply = response.choices[0].message.content.strip()
     except Exception as e:
