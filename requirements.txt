@@ -1,4 +1,7 @@
 flask
-twilio
 openai>=1.14.3
+twilio
 requests
+beautifulsoup4
+selenium
+python-dotenv
