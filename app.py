@@ -1,14 +1,14 @@
 from flask import Flask, request
 import os
-import openai
 import requests
 from base64 import b64encode
 from twilio.rest import Client
+from openai import OpenAI  # ✅ Yeni istemci
 
 app = Flask(__name__)
 
 # OpenAI istemcisi
-client_oai = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+client_oai = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 # Twilio istemcisi
 twilio_sid = os.environ.get("TWILIO_ACCOUNT_SID")
@@ -29,50 +29,40 @@ def webhook():
     messages = []
 
     if incoming_msg:
-        messages.append({"type": "text", "text": incoming_msg})
+        messages.append({
+            "role": "user",
+            "content": [{"type": "text", "text": incoming_msg}]
+        })
 
-    # Görsel varsa Twilio'dan indir ve base64'e çevir
+    # Görsel varsa ekle
     if num_media > 0:
         media_url = request.values.get("MediaUrl0")
-        try:
-            img_response = requests.get(media_url, auth=(twilio_sid, twilio_token))
-            if img_response.status_code == 200:
-                base64_image = b64encode(img_response.content).decode("utf-8")
-                messages.append({
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:image/jpeg;base64,{base64_image}"
-                    }
-                })
-            else:
-                messages.append({"type": "text", "text": "Görsel indirilemedi."})
-        except Exception as e:
-            messages.append({"type": "text", "text": f"Görsel hatası: {str(e)}"})
+        img_response = requests.get(media_url, auth=(twilio_sid, twilio_token))
+        if img_response.status_code == 200:
+            base64_img = b64encode(img_response.content).decode("utf-8")
+            messages[0]["content"].append({
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/jpeg;base64,{base64_img}"
+                }
+            })
 
-    if not messages:
-        return "Boş mesaj", 400
-
+    # GPT-4o çağrısı
     try:
         response = client_oai.chat.completions.create(
             model="gpt-4o",
-            messages=[{"role": "user", "content": messages}],
-            max_tokens=500,
-            temperature=0.7,
+            messages=messages,
+            max_tokens=1000,
+            temperature=0.7
         )
         reply = response.choices[0].message.content.strip()
     except Exception as e:
-        reply = f"GPT-4o hatası: {str(e)}"
+        reply = f"Hata: {str(e)}"
 
-    try:
-        client_twilio.messages.create(
-            body=reply,
-            from_=twilio_number,
-            to=from_number
-        )
-    except Exception as e:
-        return f"Twilio hatası: {str(e)}", 500
+    client_twilio.messages.create(
+        body=reply,
+        from_=twilio_number,
+        to=from_number
+    )
 
     return "OK", 200
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
