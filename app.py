@@ -3,8 +3,8 @@ from flask import Flask, request
 from openai import OpenAI
 from twilio.rest import Client
 from general_scraper import scrape_site
-from executor.code_tester import test_code
-from executor.code_fixer import fix_code
+from code_tester import test_code
+from code_fixer import fix_code
 from web_actions.login_bot import login_and_submit
 from utils.base64_helper import decode_base64_image
 
