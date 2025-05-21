@@ -6,7 +6,7 @@ from general_scraper import scrape_site
 from code_tester import test_code
 from code_fixer import fix_code
 from login_bot import login_and_submit
-from utils.base64_helper import decode_base64_image
+from base64_helper import decode_base64_image
 
 app = Flask(__name__)
 openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
