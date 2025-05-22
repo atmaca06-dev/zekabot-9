@@ -42,7 +42,6 @@ Eğer komut anlamıyorsan {"action": "bilinmiyor"} döndür.
     except Exception:
         command = {"action": "bilinmiyor"}
     return command
-action = command.get("action", "")
 
 if action == "bilinmiyor":
     cevap = "Komut anlaşılamadı veya bilinmiyor."
