@@ -53,11 +53,20 @@ else:
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    msg = request.values.get("Body", "").strip()  # <--- BU SATIR ÖNEMLİ!
+    msg = request.values.get("Body", "").strip()
     sender = request.values.get("From", "")
-    command = gpt_command_parser(msg)  # Şimdi msg tanımlı
+    command = gpt_command_parser(msg)    # Burada msg artık tanımlı!
     action = command.get("action", "")
-    # Devamı...
+    
+    if action == "bilinmiyor":
+        cevap = "Komut anlaşılamadı veya bilinmiyor."
+    else:
+        # Diğer işlemler burada
+        cevap = "İşlem başarılı!"
+    
+    # Burada Twilio ile cevap gönderme kodun devamı olacak
+    return "OK"
+
 
 
     # Sonuca göre ilgili fonksiyonu çalıştır
