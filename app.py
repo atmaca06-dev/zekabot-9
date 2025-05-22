@@ -53,10 +53,12 @@ else:
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    msg = request.values.get("Body", "").strip()
+    msg = request.values.get("Body", "").strip()  # <--- BU SATIR ÖNEMLİ!
     sender = request.values.get("From", "")
-    
-    komut = gpt_command_parser(msg)
+    command = gpt_command_parser(msg)  # Şimdi msg tanımlı
+    action = command.get("action", "")
+    # Devamı...
+
 
     # Sonuca göre ilgili fonksiyonu çalıştır
     yanit = ""
