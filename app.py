@@ -42,6 +42,14 @@ Eğer komut anlamıyorsan {"action": "bilinmiyor"} döndür.
     except Exception:
         command = {"action": "bilinmiyor"}
     return command
+command = gpt_command_parser(msg)
+action = command.get("action", "")
+
+if action == "bilinmiyor":
+    cevap = "Komut anlaşılamadı veya bilinmiyor."
+else:
+    # Burada diğer aksiyonlara göre işlemler yapılır
+    ...
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
