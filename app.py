@@ -42,7 +42,6 @@ Eğer komut anlamıyorsan {"action": "bilinmiyor"} döndür.
     except Exception:
         command = {"action": "bilinmiyor"}
     return command
-command = gpt_command_parser(msg)
 action = command.get("action", "")
 
 if action == "bilinmiyor":
