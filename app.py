@@ -56,8 +56,8 @@ def webhook():
     command = gpt_command_parser(msg)    # Burada msg artık tanımlı!
     action = command.get("action", "")
     
-    if action == "bilinmiyor":
-        cevap = "Komut anlaşılamadı veya bilinmiyor."
+    
+        
     else:
         # Diğer işlemler burada
         cevap = "İşlem başarılı!"
