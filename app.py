@@ -2,12 +2,7 @@ import os
 from flask import Flask, request
 from openai import OpenAI
 from twilio.rest import Client
-
-# Burada varsa ek modüllerini import et
-# from scraper.general_scraper import scrape_site
-# from executor.code_tester import test_code
-# from executor.code_fixer import fix_code
-# from web_actions.login_bot import login_and_submit
+import json
 
 app = Flask(__name__)
 
@@ -29,46 +24,43 @@ Komut ve parametrelerini şu formatta döndür:
 {{"action": "...", "site": "...", "query": "...", "kod": "...", "login_info": {{...}} }}
 
 Kullanıcı mesajı: {user_message}
-Eğer komut anlamıyorsan {"action": "bilinmiyor"} döndür.
+Eğer komut anlamıyorsan {{"action": "bilinmiyor"}} döndür.
 """
     completion = openai_client.chat.completions.create(
         model="gpt-4o",
         messages=[{"role": "system", "content": prompt}]
     )
-    # JSON kısmı genellikle completion.choices[0].message.content
-    import json
     try:
         command = json.loads(completion.choices[0].message.content)
     except Exception:
         command = {"action": "bilinmiyor"}
     return command
 
-if action == "bilinmiyor":
-    cevap = "Komut anlaşılamadı veya bilinmiyor."
-else:
-    # Burada diğer aksiyonlara göre işlemler yapılır
-    ...
-
 @app.route("/webhook", methods=["POST"])
 def webhook():
     msg = request.values.get("Body", "").strip()
     sender = request.values.get("From", "")
-    command = gpt_command_parser(msg)    # Burada msg artık tanımlı!
+    command = gpt_command_parser(msg)
     action = command.get("action", "")
-    
-    
-        
+
+    if action == "bilinmiyor":
+        cevap = "Komut anlaşılamadı veya bilinmiyor."
     else:
-        # Diğer işlemler burada
-        cevap = "İşlem başarılı!"
-    
-    # Burada Twilio ile cevap gönderme kodun devamı olacak
+        # Burada diğer aksiyonlara göre işlemler yapılır
+        cevap = f"İşlem başarılı: {command}"
+
+    # Twilio üzerinden kullanıcıya cevap gönder (isteğe bağlı)
+    # twilio_client.messages.create(
+    #     body=cevap,
+    #     from_=twilio_number,
+    #     to=sender
+    # )
+
     return "OK"
 
+if __name__ == "__main__":
+    app.run(debug=True)
 
-
-    # Sonuca göre ilgili fonksiyonu çalıştır
-    yanit = ""
     if komut["action"] == "scrape":
         # ÖRNEK: scrape_site fonksiyonuna site ve query gönder
         # yanit = scrape_site(komut["site"], komut["query"])
